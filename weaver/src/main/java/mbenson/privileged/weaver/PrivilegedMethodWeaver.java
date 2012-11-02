@@ -164,9 +164,10 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
     private static Set<CtMethod> getPrivilegedMethods(CtClass type) throws ClassNotFoundException {
         final TreeSet<CtMethod> result = new TreeSet<CtMethod>(CTMETHOD_COMPARATOR);
         for (final CtMethod m : type.getDeclaredMethods()) {
-            if ((m.getModifiers() & Modifier.ABSTRACT) == 0 && m.getAnnotation(Privileged.class) != null) {
-                result.add(m);
+            if (Modifier.isAbstract(m.getModifiers()) || m.getAnnotation(Privileged.class) == null) {
+                continue;
             }
+            result.add(m);
         }
         return result;
     }
@@ -249,11 +250,15 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
         final CtClass result = type.makeNestedClass(simpleName, true);
         result.addInterface(actionType);
 
-        final CtField owner = new CtField(type, generateName("owner"), result);
-        owner.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
-
-        debug("Adding owner field %s to %s", owner.getName(), simpleName);
-        result.addField(owner);
+        final CtField owner;
+        if (Modifier.isStatic(impl.getModifiers())) {
+            owner = null;
+        } else {
+            owner = new CtField(type, generateName("owner"), result);
+            owner.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
+            debug("Adding owner field %s to %s", owner.getName(), simpleName);
+            result.addField(owner);
+        }
 
         final List<String> propagatedParameters = new ArrayList<String>();
         int index = -1;
@@ -297,9 +302,9 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
             if (!isVoid) {
                 body.append("return ");
             }
+            final String deref = Modifier.isStatic(impl.getModifiers()) ? type.getName() : owner.getName();
             final String call =
-                String.format("%s.%s(%s)", owner.getName(), impl.getName(),
-                    StringUtils.join(propagatedParameters, ", "));
+                String.format("%s.%s(%s)", deref, impl.getName(), StringUtils.join(propagatedParameters, ", "));
 
             if (!isVoid && rt.isPrimitive()) {
                 body.appendLine("%2$s.valueOf(%1$s);", call, ((CtPrimitiveType) rt).getWrapperName());
@@ -339,7 +344,7 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
 
     private boolean weave(CtClass type, CtMethod method) throws ClassNotFoundException, CannotCompileException,
         NotFoundException, IOException {
-        if ((method.getModifiers() & (Modifier.PUBLIC | Modifier.PROTECTED)) > 0) {
+        if (Modifier.isPublic(method.getModifiers()) || Modifier.isProtected(method.getModifiers())) {
             throw new IllegalArgumentException(String.format("Cannot grant privileges to public|protected method %s",
                 toString(method)));
         }
@@ -368,9 +373,21 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
         final CtClass actionType = createAction(type, impl, iface);
         final String action = generateName("action");
 
-        body.append("final %1$s %2$s = new %3$s($0", iface.getName(), action, actionType.getName());
+        body.append("final %1$s %2$s = new %3$s(", iface.getName(), action, actionType.getName());
+        boolean firstParam;
+        if (Modifier.isStatic(implModifiers)) {
+            firstParam = true;
+        } else {
+            body.append("$0");
+            firstParam = false;
+        }
         for (int i = 1, sz = impl.getParameterTypes().length; i <= sz; i++) {
-            body.append(", $").append(Integer.toString(i));
+            if (firstParam) {
+                firstParam = false;
+            } else {
+                body.append(", ");
+            }
+            body.append('$').append(Integer.toString(i));
         }
         body.appendLine(");");
 
