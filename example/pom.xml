@@ -47,14 +47,8 @@
         <artifactId>privileged-method-weaver-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>prepare</id>
             <goals>
               <goal>prepare</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>weave</id>
-            <goals>
               <goal>weave</goal>
             </goals>
           </execution>
