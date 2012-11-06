@@ -20,12 +20,12 @@ import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
-public abstract class PrivilegedMojo extends AbstractPrivilegedMojo {
+public abstract class TestPrivilegedMojo extends AbstractPrivilegedMojo {
 
-    @Parameter(readonly = true, required = true, defaultValue = "${project.compileClasspathElements}")
+    @Parameter(readonly = true, required = true, defaultValue = "${project.testClasspathElements}")
     protected List<String> classpath;
 
-    @Parameter(readonly = true, required = true, defaultValue = "${project.build.outputDirectory}")
+    @Parameter(readonly = true, required = true, defaultValue = "${project.build.testOutputDirectory}")
     protected File target;
 
     @Override

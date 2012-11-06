@@ -28,11 +28,12 @@ import org.apache.maven.project.MavenProject;
  * Prepare for weaving by deleting classes previously woven with a different
  * policy.
  */
-@Mojo(name = "prepare", defaultPhase = LifecyclePhase.INITIALIZE, requiresDependencyCollection = ResolutionScope.RUNTIME_PLUS_SYSTEM)
+@Mojo(name = "prepare", defaultPhase = LifecyclePhase.INITIALIZE, requiresDependencyCollection = ResolutionScope.COMPILE)
 public class PrepareMojo extends PrivilegedMojo {
     @Component
     private MavenProject project;
 
+    @Override
     public void execute() throws MojoExecutionException {
         if (target.exists()) {
             try {

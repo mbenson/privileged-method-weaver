@@ -15,26 +15,33 @@
  */
 package mbenson.privileged.maven;
 
-import mbenson.privileged.Privileged;
+import javassist.NotFoundException;
 
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 
 /**
- * Goal to weave {@link SecurityManager} handling code for methods marked with
- * the {@link Privileged} annotation.
+ * Prepare for weaving by deleting classes previously woven with a different
+ * policy.
  */
-@Mojo(name = "weave", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyCollection = ResolutionScope.COMPILE)
-public class WeaveMojo extends PrivilegedMojo {
+@Mojo(name = "test-prepare", defaultPhase = LifecyclePhase.INITIALIZE, requiresDependencyCollection = ResolutionScope.TEST)
+public class TestPrepareMojo extends TestPrivilegedMojo {
+    @Component
+    private MavenProject project;
 
     @Override
-    public void execute() throws MojoFailureException {
-        try {
-            createWeaver().weaveAll();
-        } catch (Exception e) {
-            throw new MojoFailureException("failed", e);
+    public void execute() throws MojoExecutionException {
+        if (target.exists()) {
+            try {
+                createWeaver().prepare();
+            } catch (NotFoundException e) {
+                throw new MojoExecutionException("error", e);
+            }
         }
     }
+
 }

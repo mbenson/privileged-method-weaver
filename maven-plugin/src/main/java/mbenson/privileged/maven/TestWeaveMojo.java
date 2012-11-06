@@ -26,8 +26,8 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  * Goal to weave {@link SecurityManager} handling code for methods marked with
  * the {@link Privileged} annotation.
  */
-@Mojo(name = "weave", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyCollection = ResolutionScope.COMPILE)
-public class WeaveMojo extends PrivilegedMojo {
+@Mojo(name = "test-weave", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES, requiresDependencyCollection = ResolutionScope.TEST)
+public class TestWeaveMojo extends TestPrivilegedMojo {
 
     @Override
     public void execute() throws MojoFailureException {
