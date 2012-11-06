@@ -74,6 +74,16 @@ public abstract class PrivilegedTask extends Task {
             public void debug(String message) {
                 log(message, Project.MSG_DEBUG);
             }
+
+            @Override
+            public void verbose(String message) {
+                log(message, Project.MSG_VERBOSE);
+            }
+
+            @Override
+            public void warn(String message) {
+                log(message, Project.MSG_WARN);
+            }
         });
     }
 

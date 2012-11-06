@@ -57,9 +57,13 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
     public interface Log {
         void debug(String message);
 
+        void verbose(String message);
+
         void error(String message);
 
         void info(String message);
+
+        void warn(String message);
     }
 
     /**
@@ -123,11 +127,18 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
 
     protected final ClassPool classPool;
 
+    private boolean settingsReported;
+
     private Log log = new Log() {
         final Logger logger = Logger.getLogger(PrivilegedMethodWeaver.class.getName());
 
         @Override
         public void debug(String message) {
+            logger.finer(message);
+        }
+
+        @Override
+        public void verbose(String message) {
             logger.fine(message);
         }
 
@@ -139,6 +150,11 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
         @Override
         public void info(String message) {
             logger.info(message);
+        }
+
+        @Override
+        public void warn(String message) {
+            logger.warning(message);
         }
 
     };
@@ -183,6 +199,7 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
 
     public SELF loggingTo(Log log) {
         this.log = Validate.notNull(log);
+        settingsReported = false;
         @SuppressWarnings("unchecked")
         final SELF self = (SELF) this;
         return self;
@@ -200,11 +217,11 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
      */
     public boolean weave(CtClass type) throws NotFoundException, IOException, CannotCompileException,
         ClassNotFoundException {
-        info("Weave policy == %s", policy);
+        reportSettings();
         final String policyName = generateName(POLICY_NAME);
         final String policyValue = toString(type.getAttribute(policyName));
         if (policyValue != null) {
-            info("%s already woven with policy %s", type.getName(), policyValue);
+            verbose("%s already woven with policy %s", type.getName(), policyValue);
             if (!policy.name().equals(policyValue)) {
                 throw new AlreadyWovenException(type.getName(), Policy.valueOf(policyValue));
             }
@@ -225,12 +242,20 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
                 getClassFileWriter().write(type);
             }
         }
-        log.info(String.format(result ? "Wove class %s" : "Nothing to do for class %s", type.getName()));
+        log.verbose(String.format(result ? "Wove class %s" : "Nothing to do for class %s", type.getName()));
         return result;
     }
 
     protected void debug(String message, Object... args) {
         log.debug(String.format(message, args));
+    }
+
+    protected void verbose(String message, Object... args) {
+        log.verbose(String.format(message, args));
+    }
+
+    protected void warn(String message, Object... args) {
+        log.warn(String.format(message, args));
     }
 
     protected abstract ClassFileWriter getClassFileWriter();
@@ -344,14 +369,25 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
 
     private boolean weave(CtClass type, CtMethod method) throws ClassNotFoundException, CannotCompileException,
         NotFoundException, IOException {
-        if (Modifier.isPublic(method.getModifiers()) || Modifier.isProtected(method.getModifiers())) {
-            throw new IllegalArgumentException(String.format("Cannot grant privileges to public|protected method %s",
-                toString(method)));
+        final int mod = method.getModifiers();
+        final javax.lang.model.element.Modifier accessLevel;
+        if (Modifier.isPublic(mod)) {
+            accessLevel = javax.lang.model.element.Modifier.PUBLIC;
+        } else if (Modifier.isProtected(mod)) {
+            accessLevel = javax.lang.model.element.Modifier.PROTECTED;
+        } else {
+            accessLevel = null;
         }
         final String implName = generateName(method.getName());
 
         final CtMethod impl = CtNewMethod.copy(method, implName, type, null);
         int implModifiers = impl.getModifiers();
+        if (accessLevel != null) {
+            warn("Possible security leak: granting privileges to %s method %s.%s", accessLevel, type.getName(),
+                toString(method));
+            // clear PUBLIC and PROTECTED bits:
+            implModifiers &= ~(Modifier.PUBLIC | Modifier.PROTECTED);
+        }
         // set PRIVATE bit:
         implModifiers |= Modifier.PRIVATE;
         impl.setModifiers(implModifiers);
@@ -446,5 +482,12 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
         debug("Setting body of %s to:\n%s", toString(method), block);
         method.setBody(block);
         return true;
+    }
+
+    private void reportSettings() {
+        if (!settingsReported) {
+            settingsReported = true;
+            info("Weave policy == %s", policy);
+        }
     }
 }
