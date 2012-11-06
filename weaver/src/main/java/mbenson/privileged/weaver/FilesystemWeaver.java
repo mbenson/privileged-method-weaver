@@ -18,9 +18,6 @@ package mbenson.privileged.weaver;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,11 +61,18 @@ public class FilesystemWeaver extends PrivilegedMethodWeaver<FilesystemWeaver> {
         return declaringClasses;
     }
 
+    private static Class<?> getOutermost(Class<?> type) {
+        Class<?> enclosing = type.getEnclosingClass();
+        return enclosing == null ? type : getOutermost(enclosing);
+    }
+
     private static File validTarget(File target) {
         Validate.notNull(target, "target");
         Validate.isTrue(target.isDirectory(), "not a directory");
         return target;
     }
+
+    private final ClassLoader classpath;
 
     private final File target;
 
@@ -81,11 +85,13 @@ public class FilesystemWeaver extends PrivilegedMethodWeaver<FilesystemWeaver> {
 
     public FilesystemWeaver(ClassLoader classpath, File target) {
         super(createClassPool(classpath, target));
+        this.classpath = classpath;
         this.target = target;
     }
 
     public FilesystemWeaver(Policy policy, ClassLoader classpath, File target) {
         super(policy, createClassPool(classpath, target));
+        this.classpath = classpath;
         this.target = target;
     }
 
@@ -96,6 +102,7 @@ public class FilesystemWeaver extends PrivilegedMethodWeaver<FilesystemWeaver> {
      * @throws NotFoundException
      */
     public void prepare() throws NotFoundException {
+        info("preparing %s; policy = %s", target, policy);
         final Set<File> toDelete = new TreeSet<File>();
         for (final Class<?> type : getDeclaringClasses(findPrivilegedMethods())) {
             final CtClass ctClass = classPool.get(type.getName());
@@ -103,11 +110,16 @@ public class FilesystemWeaver extends PrivilegedMethodWeaver<FilesystemWeaver> {
             if (policyValue == null || policyValue.equals(policy.name())) {
                 continue;
             }
-            // simple classname, plus any inner classes:
-            final String pattern = new StringBuilder(type.getSimpleName()).append("(\\$.+)??\\.class").toString();
-            toDelete.addAll(FileUtils.listFiles(
-                new File(target, StringUtils.replaceChars(ctClass.getPackageName(), '.', File.separatorChar)),
-                new RegexFileFilter(pattern), null));
+            debug("class %s previously woven with policy %s", type.getName(), policyValue);
+            final File packageDir =
+                new File(target, StringUtils.replaceChars(ctClass.getPackageName(), '.', File.separatorChar));
+
+            // simple classname of outermost class, plus any inner classes:
+            final String pattern =
+                new StringBuilder(getOutermost(type).getSimpleName()).append("(\\$.+)??\\.class").toString();
+
+            debug("searching %s for pattern '%s'", packageDir.getAbsolutePath(), pattern);
+            toDelete.addAll(FileUtils.listFiles(packageDir, new RegexFileFilter(pattern), null));
         }
         if (toDelete.isEmpty()) {
             return;
@@ -147,14 +159,7 @@ public class FilesystemWeaver extends PrivilegedMethodWeaver<FilesystemWeaver> {
     }
 
     private List<Method> findPrivilegedMethods() {
-        final AnnotationFinder annotationFinder;
-        try {
-            annotationFinder =
-                new AnnotationFinder(new FileArchive(new URLClassLoader(new URL[] { target.toURI().toURL() }), target),
-                    false);
-        } catch (final MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+        final AnnotationFinder annotationFinder = new AnnotationFinder(new FileArchive(classpath, target), false);
         return annotationFinder.findAnnotatedMethods(Privileged.class);
     }
 }
