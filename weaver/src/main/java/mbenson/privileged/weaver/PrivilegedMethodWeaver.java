@@ -264,6 +264,10 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
         log.info(String.format(message, args));
     }
 
+    protected boolean permitMethodWeaving(AccessLevel accessLevel) {
+        return true;
+    }
+
     private CtClass createAction(CtClass type, CtMethod impl, Class<?> iface) throws NotFoundException,
         CannotCompileException, IOException {
         final boolean exc = impl.getExceptionTypes().length > 0;
@@ -369,30 +373,22 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
 
     private boolean weave(CtClass type, CtMethod method) throws ClassNotFoundException, CannotCompileException,
         NotFoundException, IOException {
-        final int mod = method.getModifiers();
-        final javax.lang.model.element.Modifier accessLevel;
-        if (Modifier.isPublic(mod)) {
-            accessLevel = javax.lang.model.element.Modifier.PUBLIC;
-        } else if (Modifier.isProtected(mod)) {
-            accessLevel = javax.lang.model.element.Modifier.PROTECTED;
-        } else {
-            accessLevel = null;
+        final AccessLevel accessLevel = AccessLevel.of(method.getModifiers());
+        if (!permitMethodWeaving(accessLevel)) {
+            warn("Ignoring %s method %s.%s", accessLevel, type.getName(), toString(method));
+            return false;
+        }
+        if (accessLevel.compareTo(AccessLevel.PACKAGE) > 0) {
+            warn("Possible security leak: granting privileges to %s method %s.%s", accessLevel, type.getName(),
+                toString(method));
         }
         final String implName = generateName(method.getName());
 
         final CtMethod impl = CtNewMethod.copy(method, implName, type, null);
-        int implModifiers = impl.getModifiers();
-        if (accessLevel != null) {
-            warn("Possible security leak: granting privileges to %s method %s.%s", accessLevel, type.getName(),
-                toString(method));
-            // clear PUBLIC and PROTECTED bits:
-            implModifiers &= ~(Modifier.PUBLIC | Modifier.PROTECTED);
-        }
-        // set PRIVATE bit:
-        implModifiers |= Modifier.PRIVATE;
-        impl.setModifiers(implModifiers);
+        impl.setModifiers(AccessLevel.PRIVATE.merge(method.getModifiers()));
         type.addMethod(impl);
-        debug("Copied %s to %s", toString(method), toString(impl));
+        debug("Copied %2$s %1$s.%3$s to %4$s %1$s.%5$s", type.getName(), accessLevel, toString(method),
+            AccessLevel.PRIVATE, toString(impl));
 
         final Body body = new Body();
         if (policy.isConditional()) {
@@ -409,9 +405,9 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
         final CtClass actionType = createAction(type, impl, iface);
         final String action = generateName("action");
 
-        body.append("final %1$s %2$s = new %3$s(", iface.getName(), action, actionType.getName());
+        body.append("final %s %s = new %s(", iface.getName(), action, actionType.getName());
         boolean firstParam;
-        if (Modifier.isStatic(implModifiers)) {
+        if (Modifier.isStatic(impl.getModifiers())) {
             firstParam = true;
         } else {
             body.append("$0");
