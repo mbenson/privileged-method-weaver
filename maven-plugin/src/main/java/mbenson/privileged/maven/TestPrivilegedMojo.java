@@ -18,6 +18,8 @@ package mbenson.privileged.maven;
 import java.io.File;
 import java.util.List;
 
+import mbenson.privileged.weaver.AccessLevel;
+
 import org.apache.maven.plugins.annotations.Parameter;
 
 public abstract class TestPrivilegedMojo extends AbstractPrivilegedMojo {
@@ -28,6 +30,9 @@ public abstract class TestPrivilegedMojo extends AbstractPrivilegedMojo {
     @Parameter(readonly = true, required = true, defaultValue = "${project.build.testOutputDirectory}")
     protected File target;
 
+    @Parameter(readonly = false, required = true, defaultValue = "PUBLIC")
+    protected AccessLevel accessLevel;
+
     @Override
     protected List<String> getClasspath() {
         return classpath;
@@ -36,5 +41,10 @@ public abstract class TestPrivilegedMojo extends AbstractPrivilegedMojo {
     @Override
     protected File getTarget() {
         return target;
+    }
+
+    @Override
+    protected AccessLevel getAccessLevel() {
+        return accessLevel;
     }
 }

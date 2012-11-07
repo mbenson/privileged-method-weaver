@@ -378,7 +378,7 @@ public abstract class PrivilegedMethodWeaver<SELF extends PrivilegedMethodWeaver
             warn("Ignoring %s method %s.%s", accessLevel, type.getName(), toString(method));
             return false;
         }
-        if (accessLevel.compareTo(AccessLevel.PACKAGE) > 0) {
+        if (AccessLevel.PACKAGE.compareTo(accessLevel) > 0) {
             warn("Possible security leak: granting privileges to %s method %s.%s", accessLevel, type.getName(),
                 toString(method));
         }

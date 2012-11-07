@@ -19,6 +19,7 @@ import java.io.File;
 import java.net.URLClassLoader;
 import java.util.List;
 
+import mbenson.privileged.weaver.AccessLevel;
 import mbenson.privileged.weaver.FilesystemWeaver;
 import mbenson.privileged.weaver.PrivilegedMethodWeaver.Log;
 import mbenson.privileged.weaver.PrivilegedMethodWeaver.Policy;
@@ -44,39 +45,45 @@ public abstract class AbstractPrivilegedMojo extends AbstractMojo {
 
     protected abstract File getTarget();
 
+    protected abstract AccessLevel getAccessLevel();
+
     protected FilesystemWeaver createWeaver() {
-        return new FilesystemWeaver(policy, new URLClassLoader(URLArray.fromPaths(getClasspath())), getTarget())
-            .loggingTo(new Log() {
+        return new FilesystemWeaver(policy, new URLClassLoader(URLArray.fromPaths(getClasspath())), getTarget()) {
+            @Override
+            protected boolean permitMethodWeaving(AccessLevel accessLevel) {
+                return getAccessLevel().compareTo(accessLevel) <= 0;
+            }
+        }.loggingTo(new Log() {
 
-                @Override
-                public void info(String message) {
+            @Override
+            public void info(String message) {
+                getLog().info(message);
+            }
+
+            @Override
+            public void error(String message) {
+                getLog().error(message);
+            }
+
+            @Override
+            public void debug(String message) {
+                getLog().debug(message);
+            }
+
+            @Override
+            public void verbose(String message) {
+                if (verbose) {
                     getLog().info(message);
-                }
-
-                @Override
-                public void error(String message) {
-                    getLog().error(message);
-                }
-
-                @Override
-                public void debug(String message) {
+                } else {
                     getLog().debug(message);
                 }
+            }
 
-                @Override
-                public void verbose(String message) {
-                    if (verbose) {
-                        getLog().info(message);
-                    } else {
-                        getLog().debug(message);
-                    }
-                }
-
-                @Override
-                public void warn(String message) {
-                    getLog().warn(message);
-                }
-            });
+            @Override
+            public void warn(String message) {
+                getLog().warn(message);
+            }
+        });
     }
 
 }

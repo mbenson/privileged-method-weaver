@@ -19,6 +19,7 @@ import java.io.File;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
+import mbenson.privileged.weaver.AccessLevel;
 import mbenson.privileged.weaver.FilesystemWeaver;
 import mbenson.privileged.weaver.PrivilegedMethodWeaver.Log;
 import mbenson.privileged.weaver.PrivilegedMethodWeaver.Policy;
@@ -41,6 +42,7 @@ public abstract class PrivilegedTask extends Task {
     private File target;
     private Path classpath;
     private String classpathref;
+    private AccessLevel accessLevel;
 
     @Override
     public abstract void execute() throws BuildException;
@@ -58,7 +60,12 @@ public abstract class PrivilegedTask extends Task {
         log("Using " + p.toString(), Project.MSG_DEBUG);
         final ClassLoader loader = new URLClassLoader(URLArray.fromPaths(Arrays.asList(p.list())));
 
-        return new FilesystemWeaver(getPolicy(), loader, getTarget()).loggingTo(new Log() {
+        return new FilesystemWeaver(getPolicy(), loader, getTarget()) {
+            @Override
+            protected boolean permitMethodWeaving(AccessLevel accessLevel) {
+                return getAccessLevel().compareTo(accessLevel) <= 0;
+            }
+        }.loggingTo(new Log() {
 
             @Override
             public void info(String message) {
@@ -135,5 +142,18 @@ public abstract class PrivilegedTask extends Task {
 
     public void setClasspathRef(String classpathref) {
         this.classpathref = classpathref;
+    }
+
+    protected AccessLevel getAccessLevel() {
+        return ObjectUtils.defaultIfNull(accessLevel, AccessLevel.PACKAGE);
+    }
+
+    /**
+     * Set "minimum" access level to be woven (default PACKAGE).
+     * 
+     * @param accessLevel
+     */
+    public void setAccessLevel(AccessLevel accessLevel) {
+        this.accessLevel = accessLevel;
     }
 }
