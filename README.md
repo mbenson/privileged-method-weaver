@@ -1,10 +1,10 @@
-Provides machinery to automate the handling of a Java Security Manager.
-This involves wrapping calls that may trigger access control
-exceptions in `PrivilegedAction` objects; unfortunately this is
-quite an expensive operation and slows code down considerably--when
-executed in an environment that has no `SecurityManager`
-activated it is an utter waste.  The typical pattern to cope
-with this is:
+Provides machinery to automate the handling of Java Security access
+controls in code.  This involves wrapping calls that may trigger
+`java.lang.SecurityException`s in `PrivilegedAction` objects;
+unfortunately this is quite an expensive operation and slows code
+down considerably--when executed in an environment that has no
+`SecurityManager` activated it is an utter waste.
+The typical pattern to cope with this is:
 
 ```java
 if (System.getSecurityManager() != null) {
