@@ -20,7 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>privileged-method-weaver-parent</artifactId>
-    <groupId>mbenson.pmw</groupId>
+    <groupId>com.github.mbenson.privileged-method-weaver</groupId>
     <version>0.1-SNAPSHOT</version>
   </parent>
   <artifactId>privileged-method-weaver-example</artifactId>
@@ -30,7 +30,7 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>mbenson.pmw</groupId>
+      <groupId>com.github.mbenson.privileged-method-weaver</groupId>
       <artifactId>privileged-method-weaver-api</artifactId>
     </dependency>
     <dependency>
@@ -43,7 +43,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>mbenson.pmw</groupId>
+        <groupId>com.github.mbenson.privileged-method-weaver</groupId>
         <artifactId>privileged-method-weaver-maven-plugin</artifactId>
         <executions>
           <execution>
@@ -67,7 +67,7 @@
               <pluginExecutions>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>mbenson.pmw</groupId>
+                    <groupId>com.github.mbenson.privileged-method-weaver</groupId>
                     <artifactId>privileged-method-weaver-maven-plugin</artifactId>
                     <versionRange>[0.1-SNAPSHOT,)</versionRange>
                     <goals>

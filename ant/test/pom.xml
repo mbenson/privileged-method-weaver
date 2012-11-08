@@ -20,7 +20,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>mbenson.pmw</groupId>
+    <groupId>com.github.mbenson.privileged-method-weaver</groupId>
     <artifactId>privileged-method-weaver-antlib-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
@@ -32,17 +32,17 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>mbenson.pmw</groupId>
+      <groupId>com.github.mbenson.privileged-method-weaver</groupId>
       <artifactId>privileged-method-weaver-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>mbenson.pmw</groupId>
+      <groupId>com.github.mbenson.privileged-method-weaver</groupId>
       <artifactId>privileged-method-weaver-example</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>mbenson.pmw</groupId>
+      <groupId>com.github.mbenson.privileged-method-weaver</groupId>
       <artifactId>privileged-method-weaver-antlib</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -67,7 +67,7 @@
             </goals>
             <configuration>
               <classifier>sources</classifier>
-              <includeGroupIds>mbenson.pmw</includeGroupIds>
+              <includeGroupIds>com.github.mbenson.privileged-method-weaver</includeGroupIds>
               <includeArtifactIds>privileged-method-weaver-example</includeArtifactIds>
               <includes>**/*.java</includes>
               <outputDirectory>${project.build.directory}/example-sources</outputDirectory>
@@ -91,7 +91,7 @@
             </goals>
             <configuration>
               <classifier>test-sources</classifier>
-              <includeGroupIds>mbenson.pmw</includeGroupIds>
+              <includeGroupIds>com.github.mbenson.privileged-method-weaver</includeGroupIds>
               <includeArtifactIds>privileged-method-weaver-example</includeArtifactIds>
               <includes>**/*.java</includes>
               <outputDirectory>${project.build.directory}/example-test-sources</outputDirectory>
@@ -105,7 +105,7 @@
             </goals>
             <configuration>
               <classifier>test-sources</classifier>
-              <includeGroupIds>mbenson.pmw</includeGroupIds>
+              <includeGroupIds>com.github.mbenson.privileged-method-weaver</includeGroupIds>
               <includeArtifactIds>privileged-method-weaver-example</includeArtifactIds>
               <includes>java.policy</includes>
               <outputDirectory>${project.build.directory}/example-test-resources</outputDirectory>
@@ -125,12 +125,12 @@
             </goals>
             <configuration>
               <target>
-                <sequential xmlns:priv="antlib:mbenson.privileged.ant">
+                <sequential xmlns:priv="antlib:com.github.mbenson.privileged.ant">
                   <path id="cp">
                     <fileset dir="${project.build.directory}/compile-classpath" />
                   </path>
-                  <taskdef uri="antlib:mbenson.privileged.ant"
-                           resource="mbenson/privileged/ant/antlib.xml"
+                  <taskdef uri="antlib:com.github.mbenson.privileged.ant"
+                           resource="com/github/mbenson/privileged/ant/antlib.xml"
                            classpathref="cp" />
                   <priv:prepare target="${project.build.outputDirectory}"
                               classpathref="cp"
@@ -147,12 +147,12 @@
             </goals>
             <configuration>
               <target>
-                <sequential xmlns:priv="antlib:mbenson.privileged.ant">
+                <sequential xmlns:priv="antlib:com.github.mbenson.privileged.ant">
                   <path id="cp">
                     <fileset dir="${project.build.directory}/compile-classpath" />
                   </path>
-                  <taskdef uri="antlib:mbenson.privileged.ant"
-                           resource="mbenson/privileged/ant/antlib.xml"
+                  <taskdef uri="antlib:com.github.mbenson.privileged.ant"
+                           resource="com/github/mbenson/privileged/ant/antlib.xml"
                            classpathref="cp" />
                   <priv:weave target="${project.build.outputDirectory}"
                               classpathref="cp"

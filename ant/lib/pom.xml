@@ -20,7 +20,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>mbenson.pmw</groupId>
+    <groupId>com.github.mbenson.privileged-method-weaver</groupId>
     <artifactId>privileged-method-weaver-antlib-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
@@ -32,7 +32,7 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>mbenson.pmw</groupId>
+      <groupId>com.github.mbenson.privileged-method-weaver</groupId>
       <artifactId>privileged-method-weaver</artifactId>
     </dependency>
     <dependency>
@@ -80,24 +80,24 @@
               <relocations>
                 <relocation>
                   <pattern>org.apache.commons.lang3.</pattern>
-                  <shadedPattern>mbenson.privileged.ant._lang3.</shadedPattern>
+                  <shadedPattern>com.github.mbenson.privileged.ant._lang3.</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.apache.commons.io.</pattern>
-                  <shadedPattern>mbenson.privileged.ant._io.</shadedPattern>
+                  <shadedPattern>com.github.mbenson.privileged.ant._io.</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.apache.xbean.</pattern>
-                  <shadedPattern>mbenson.privileged.ant._xbean.</shadedPattern>
+                  <shadedPattern>com.github.mbenson.privileged.ant._xbean.</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>javassist.</pattern>
-                  <shadedPattern>mbenson.privileged.ant._javassist.</shadedPattern>
+                  <shadedPattern>com.github.mbenson.privileged.ant._javassist.</shadedPattern>
                 </relocation>
               </relocations>
               <artifactSet>
                 <excludes>
-                  <exclude>mbenson.pmw:privileged-method-weaver-api</exclude>
+                  <exclude>com.github.mbenson.pmw:privileged-method-weaver-api</exclude>
                 </excludes>
               </artifactSet>
               <filters>
