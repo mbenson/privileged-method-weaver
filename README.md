@@ -11,6 +11,7 @@ if (System.getSecurityManager() != null) {
   AccessController.doPrivileged(new PrivilegedAction<Void>() {
     public Void run() {
       doSomethingThatRequiresPermissions();
+      return null;
     }
   });
 } else {
