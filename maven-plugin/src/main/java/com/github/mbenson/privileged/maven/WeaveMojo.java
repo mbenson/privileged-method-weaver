@@ -15,7 +15,6 @@
  */
 package com.github.mbenson.privileged.maven;
 
-
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -24,7 +23,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import com.github.mbenson.privileged.Privileged;
 
 /**
- * Goal to weave {@link SecurityManager} handling code for methods marked with
+ * Goal to weave classes with {@link SecurityManager} handling code for methods marked with
  * the {@link Privileged} annotation.
  */
 @Mojo(name = "weave", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyCollection = ResolutionScope.COMPILE)

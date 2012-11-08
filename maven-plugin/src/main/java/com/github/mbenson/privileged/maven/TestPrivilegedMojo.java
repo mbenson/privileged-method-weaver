@@ -18,7 +18,6 @@ package com.github.mbenson.privileged.maven;
 import java.io.File;
 import java.util.List;
 
-
 import org.apache.maven.plugins.annotations.Parameter;
 
 import com.github.mbenson.privileged.weaver.AccessLevel;
